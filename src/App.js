@@ -1,9 +1,9 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import Search from './search/Search.js'
 
 function App() {
-  console.log('hello there')
   return (
     <div className="App">
       <header className="App-header">
@@ -20,6 +20,7 @@ function App() {
           Learn React
         </a>
       </header>
+      <Search />
     </div>
   );
 }
