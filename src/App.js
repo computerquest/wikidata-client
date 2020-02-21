@@ -2,7 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import Search from './search/Search.js'
-import Graph from './graph/Graph.js'
+import NetworkGraph from './graph/NetworkGraph.js'
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
         </a>
       </header>
       <Search />
-      <Graph />
+      <NetworkGraph />
     </div>
   );
 }

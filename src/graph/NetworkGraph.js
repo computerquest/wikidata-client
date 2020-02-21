@@ -1,13 +1,15 @@
 import React from 'react';
-import { Sigma, RandomizeNodePositions, RelativeSize } from 'react-sigma';
-//https://github.com/dunnock/react-sigma
+import { Graph } from "react-d3-graph";
 
-class Graph extends React.Component {
+class NetworkGraph extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			graph: null,
+			graph: {
+				nodes: [{ id: "Harry" }, { id: "Sally" }, { id: "Alice" }],
+				links: [{ source: "Harry", target: "Sally" }, { source: "Harry", target: "Alice" }],
+			},
 			loading: false
 		}
 		this.fetchGraph = this.fetchGraph.bind(this);
@@ -16,7 +18,7 @@ class Graph extends React.Component {
 	componentDidMount() {
 		console.log('this did mount')
 		this.fetchGraph();
-		this.timer = setInterval(() => this.fetchGraph(), 5000);
+		this.timer = setInterval(() => this.fetchGraph(), 10000);
 	}
 
 	fetchGraph() {
@@ -30,8 +32,8 @@ class Graph extends React.Component {
 				throw new Error("Data fetched incorrectly")
 			}
 		}).then(data => {
-			this.setState({ graph: data, loading: false })
 			console.log(data)
+			this.setState({ graph: data, loading: false })
 		}).catch(error => this.setState({ error, loading: false }))
 	}
 
@@ -42,16 +44,28 @@ class Graph extends React.Component {
 			return (<div><p>There has been an error</p></div>);
 		}
 
+		const myConfig =
+		{
+			height: 1000,
+			width: 1000,
+			node: {
+				"labelProperty": "label",
+				//"size": 10
+			},
+		};
+
+
 		return (
 			<div>
-				<Sigma graph={graph} settings={{ drawEdges: true, clone: false }}>
-					<RelativeSize initialSize={15} />
-					<RandomizeNodePositions />
-				</Sigma>
+				<Graph
+					id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
+					data={graph}
+					config={myConfig}
+				/>;
 				<h1>{loading}</h1>
 			</div>
 		);
 	}
 }
 
-export default Graph;
+export default NetworkGraph;
