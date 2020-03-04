@@ -1,5 +1,5 @@
 import React from 'react';
-import { Graph } from "react-d3-graph";
+import ForceGraph2D from 'react-force-graph-2d';
 
 class NetworkGraph extends React.Component {
 	constructor(props) {
@@ -25,7 +25,7 @@ class NetworkGraph extends React.Component {
 		console.log('fetching the graph')
 		this.setState({ loading: true })
 
-		fetch('http://127.0.0.1:5001/poll?obj1=Q76&obj2=Q13133').then(response => {
+		fetch('http://127.0.0.1:5000/poll?obj1=Q76&obj2=Q13133').then(response => {
 			if (response.ok) {
 				return response.json()
 			} else {
@@ -34,7 +34,10 @@ class NetworkGraph extends React.Component {
 		}).then(data => {
 			console.log(data)
 			this.setState({ graph: data, loading: false })
-		}).catch(error => this.setState({ error, loading: false }))
+		}).catch(error => {
+			console.log(error)
+			this.setState({ error, loading: false })
+		})
 	}
 
 	render() {
@@ -44,23 +47,30 @@ class NetworkGraph extends React.Component {
 			return (<div><p>There has been an error</p></div>);
 		}
 
-		const myConfig =
-		{
-			height: 1000,
-			width: 1000,
-			node: {
-				"labelProperty": "label",
-				//"size": 10
-			},
-		};
-
+		console.log(graph)
 
 		return (
 			<div>
-				<Graph
-					id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-					data={graph}
-					config={myConfig}
+				<ForceGraph2D
+					graphData={graph}
+					nodeLabel="label"
+					linkLabel="label"
+					nodeAutoColorBy="distance"
+					nodeCanvasObject={(node, ctx, globalScale) => {
+						const label = node.label;
+						const fontSize = 12 / globalScale;
+						ctx.font = `${fontSize}px Sans-Serif`;
+						const textWidth = ctx.measureText(label).width;
+						const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+
+						ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+						ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+
+						ctx.textAlign = 'center';
+						ctx.textBaseline = 'middle';
+						ctx.fillStyle = node.color;
+						ctx.fillText(label, node.x, node.y);
+					}}
 				/>;
 				<h1>{loading}</h1>
 			</div>
