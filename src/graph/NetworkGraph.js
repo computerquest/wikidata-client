@@ -10,7 +10,8 @@ class NetworkGraph extends React.Component {
 				nodes: [{ id: "Harry" }, { id: "Sally" }, { id: "Alice" }],
 				links: [{ source: "Harry", target: "Sally" }, { source: "Harry", target: "Alice" }],
 			},
-			loading: false
+			loading: false,
+			target: []
 		}
 		this.fetchGraph = this.fetchGraph.bind(this);
 	}
@@ -21,11 +22,24 @@ class NetworkGraph extends React.Component {
 		this.timer = setInterval(() => this.fetchGraph(), 10000);
 	}
 
+	componentDidUpdate(oldProps) {
+		//this is to make sure that the props changed
+		if (oldProps.target !== this.props.target) {
+			console.log('updating the graph targets to ', this.props.target)
+			this.setState({ target: this.props.target })
+		}
+	}
+
 	fetchGraph() {
+		if (this.state.target[0] === undefined || this.state.target[1] === undefined) {
+			return
+		}
+
 		console.log('fetching the graph')
 		this.setState({ loading: true })
 
-		fetch('http://127.0.0.1:5000/poll?obj1=Q76&obj2=Q13133').then(response => {
+
+		fetch('http://127.0.0.1:5000/poll?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).then(response => {
 			if (response.ok) {
 				return response.json()
 			} else {
@@ -47,7 +61,7 @@ class NetworkGraph extends React.Component {
 			return (<div><p>There has been an error</p></div>);
 		}
 
-		console.log(graph)
+		//console.log(graph)
 
 		return (
 			<div>

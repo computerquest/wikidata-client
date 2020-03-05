@@ -3,18 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@material-ui/core": "^4.9.0",
+    "@material-ui/core": "^4.9.5",
+    "@material-ui/lab": "^4.0.0-alpha.45",
     "@material-ui/styles": "^4.9.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.4.0",
     "@testing-library/user-event": "^7.2.1",
     "d3": "^5.15.0",
+    "es6-promise": "^4.2.8",
+    "isomorphic-fetch": "^2.2.1",
     "react": "^16.12.0",
     "react-d3-graph": "^2.3.0",
     "react-dom": "^16.12.0",
+    "react-force-graph-2d": "^1.13.7",
     "react-graph-vis": "^1.0.5",
     "react-scripts": "3.3.0",
-    "react-sigma": "^1.2.34"
+    "react-sigma": "^1.2.34",
+    "wikidata-entity-lookup": "^1.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

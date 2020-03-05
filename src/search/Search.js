@@ -1,8 +1,8 @@
 import React from 'react'
-import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import { withStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
+import Searchfield from './Searchfield.js'
 
 const styles = theme => ({
 	root: {
@@ -24,21 +24,27 @@ class Search extends React.Component {
 			second: 'Merrick Christensen'
 		};
 
-		this.handleChangeFirst = this.handleChangeFirst.bind(this);
+		this.handleNewSearch = this.handleNewSearch.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
-		this.handleChangeSecond = this.handleChangeSecond.bind(this);
+		//this.handleChangeSecond = this.handleChangeSecond.bind(this);
 	}
 
-	handleChangeFirst(event) {
-		this.setState({ first: event.target.value });
-	}
-
-	handleChangeSecond(event) {
-		this.setState({ second: event.target.value });
+	handleNewSearch(who, event) {
+		let dict = {}
+		dict[who] = event
+		this.setState(dict);
+		console.log('state is ', this.state, dict)
 	}
 
 	handleSubmit(event) {
-		alert('A name was submitted: ' + this.state.value);
+		alert('http://127.0.0.1:5000/start?obj1=' + this.state.first + '&obj2=' + this.state.second);
+
+		fetch('http://127.0.0.1:5000/start?obj1=' + this.state.first + '&obj2=' + this.state.second).then(() => {
+			this.props.updateTarget(this.state.first, this.state.second)
+		}).catch((e) => {
+			console.log('error sending the start request from search')
+			console.log(e)
+		})
 		event.preventDefault();
 	}
 
@@ -48,24 +54,12 @@ class Search extends React.Component {
 			<form onSubmit={this.handleSubmit} xs={12} className={classes.root}>
 				<Grid container spacing={1}>
 					<Grid item xs={4}>
-						<TextField
-							id="first"
-							label="First"
-							variant="outlined"
-							value={this.state.first}
-							onChange={this.handleChangeFirst}
-							className={classes.textField}
-						/>
+						<Searchfield id='first' onChange={this.handleNewSearch} />
 					</Grid>
 					<Grid item xs={2}><h2>and</h2></Grid>
-					<Grid item xs={4}><TextField
-						id="second"
-						label="Second"
-						variant="outlined"
-						value={this.state.second}
-						onChange={this.handleChangeSecond}
-						className={classes.textField}
-					/></Grid>
+					<Grid item xs={4}>
+						<Searchfield id='second' onChange={this.handleNewSearch} />
+					</Grid>
 					<Grid item xs={2}><Button color="primary" type="submit">Search</Button></Grid>
 				</Grid>
 			</form>

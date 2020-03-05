@@ -5,6 +5,12 @@ import Search from './search/Search.js'
 import NetworkGraph from './graph/NetworkGraph.js'
 
 function App() {
+  const [searchTarget, setSearchTarget] = React.useState([])
+  let setTarget = (first, second) => {
+    console.log('setting target', [first, second])
+    setSearchTarget([first, second])
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -21,8 +27,8 @@ function App() {
           Learn React
         </a>
       </header>
-      <Search />
-      <NetworkGraph />
+      <Search updateTarget={setTarget} />
+      <NetworkGraph target={searchTarget} />
     </div>
   );
 }
