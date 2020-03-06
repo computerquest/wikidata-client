@@ -13,7 +13,7 @@ export default function Asynchronous(props) {
 	const [loading, setLoading] = React.useState(false)
 
 	React.useEffect(() => {
-		console.log('autocompleting with', text, 'options: ', options.length)
+		console.log('autocompleting with', text)
 		if (text === '') {
 			return
 		}
@@ -31,8 +31,8 @@ export default function Asynchronous(props) {
 			let list = []
 			const map = new Map();
 			for (const item of ans) {
-				if (!map.has(item.name)) {
-					map.set(item.name, true);    // set any value to Map
+				if (!map.has(item.id)) {
+					map.set(item.id, true);    // set any value to Map
 					list.push({ name: item.name + ' (' + item.description + ')', value: item.id.match(/Q\d*$/g) });
 				}
 			}
@@ -94,7 +94,7 @@ export default function Asynchronous(props) {
 			renderInput={params => (
 				<TextField
 					{...params}
-					label="Asynchronous"
+					label={props.label}
 					fullWidth
 					variant="outlined"
 					InputProps={{

@@ -7,8 +7,8 @@ class NetworkGraph extends React.Component {
 
 		this.state = {
 			graph: {
-				nodes: [{ id: "Harry" }, { id: "Sally" }, { id: "Alice" }],
-				links: [{ source: "Harry", target: "Sally" }, { source: "Harry", target: "Alice" }],
+				nodes: [],
+				links: [],
 			},
 			loading: false,
 			target: []
@@ -16,10 +16,24 @@ class NetworkGraph extends React.Component {
 		this.fetchGraph = this.fetchGraph.bind(this);
 	}
 
+	onUnload = e => {
+		e.preventDefault();
+		e.returnValue = '';
+
+		if (this.props.target !== []) {
+			console.log('sending close request')
+			fetch('http://127.0.0.1:5000/detach?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).catch(() => {
+				console.log('there was an error')
+			})
+		}
+	}
+
 	componentDidMount() {
 		console.log('this did mount')
 		this.fetchGraph();
 		this.timer = setInterval(() => this.fetchGraph(), 10000);
+
+		window.addEventListener("beforeunload", this.onUnload);
 	}
 
 	componentDidUpdate(oldProps) {
@@ -47,7 +61,7 @@ class NetworkGraph extends React.Component {
 			}
 		}).then(data => {
 			console.log(data)
-			this.setState({ graph: data, loading: false })
+			this.setState({ graph: data, loading: false, error: false })
 		}).catch(error => {
 			console.log(error)
 			this.setState({ error, loading: false })

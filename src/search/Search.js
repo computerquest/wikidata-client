@@ -54,11 +54,11 @@ class Search extends React.Component {
 			<form onSubmit={this.handleSubmit} xs={12} className={classes.root}>
 				<Grid container spacing={1}>
 					<Grid item xs={4}>
-						<Searchfield id='first' onChange={this.handleNewSearch} />
+						<Searchfield id='first' label={'First Object'} onChange={this.handleNewSearch} />
 					</Grid>
 					<Grid item xs={2}><h2>and</h2></Grid>
 					<Grid item xs={4}>
-						<Searchfield id='second' onChange={this.handleNewSearch} />
+						<Searchfield id='second' label={'Second Object'} onChange={this.handleNewSearch} />
 					</Grid>
 					<Grid item xs={2}><Button color="primary" type="submit">Search</Button></Grid>
 				</Grid>
