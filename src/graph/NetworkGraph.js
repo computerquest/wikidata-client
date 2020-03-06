@@ -41,6 +41,13 @@ class NetworkGraph extends React.Component {
 		if (oldProps.target !== this.props.target) {
 			console.log('updating the graph targets to ', this.props.target)
 			this.setState({ target: this.props.target })
+
+			if (this.props.target !== []) {
+				console.log('sending close request')
+				fetch('http://127.0.0.1:5000/detach?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).catch(() => {
+					console.log('there was an error')
+				})
+			}
 		}
 	}
 
