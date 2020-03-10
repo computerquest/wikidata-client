@@ -13,7 +13,6 @@ export default function Asynchronous(props) {
 	const [loading, setLoading] = React.useState(false)
 
 	React.useEffect(() => {
-		console.log('autocompleting with', text)
 		if (text === '') {
 			return
 		}
@@ -23,7 +22,6 @@ export default function Asynchronous(props) {
 		(async () => {
 			setLoading(true)
 			let init_text = text
-			console.log('making the auto request with', init_text)
 			let ans = [...(await wikidataLookup.findPerson(init_text)), ...(await wikidataLookup.findRS(init_text)), ...(await wikidataLookup.findOrganization(init_text)),
 			...(await wikidataLookup.findPlace(init_text)), ...(await wikidataLookup.findTitle(init_text))]
 
@@ -40,13 +38,10 @@ export default function Asynchronous(props) {
 			if (text === init_text && active) {
 				setLoading(false)
 				setOptions(list);
-			} else {
-				console.log('no longer newest', init_text)
 			}
-		})().then(() => console.log('done loading the async'));
+		})()
 
 		return () => {
-			console.log('requesting to cancel', text)
 			active = false;
 		};
 	}, [text]);
@@ -68,7 +63,6 @@ export default function Asynchronous(props) {
 	}
 
 	let handleChange = (event, value, reason) => {
-		console.log('set value to', value)
 		setText(value)
 	}
 

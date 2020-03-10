@@ -1,5 +1,8 @@
 import React from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
+import IconButton from '@material-ui/core/Button';
+import PauseIcon from '@material-ui/icons/Pause';
+import PlayArrow from '@material-ui/icons/PlayArrow';
 
 class NetworkGraph extends React.Component {
 	constructor(props) {
@@ -11,9 +14,11 @@ class NetworkGraph extends React.Component {
 				links: [],
 			},
 			loading: false,
-			target: []
+			target: [],
+			active: true
 		}
 		this.fetchGraph = this.fetchGraph.bind(this);
+		this.handlePausePlay = this.handlePausePlay.bind(this);
 	}
 
 	onUnload = e => {
@@ -67,30 +72,52 @@ class NetworkGraph extends React.Component {
 				throw new Error("Data fetched incorrectly")
 			}
 		}).then(data => {
-			console.log(data)
-			this.setState({ graph: data, loading: false, error: false })
+			this.setState({ graph: data, error: false })
+			console.log(this.state.graph)
 		}).catch(error => {
 			console.log(error)
 			this.setState({ error, loading: false })
 		})
 	}
 
+	handlePausePlay() {
+		console.log('pausing and playiing')
+		if (this.state.active) {
+			clearInterval(this.timer)
+		} else {
+			this.timer = setInterval(() => this.fetchGraph(), 10000);
+		}
+
+		this.setState({ active: !this.state.active })
+	}
+
 	render() {
-		const { error, graph, loading } = this.state
+		const { error, graph, loading, active } = this.state
 
 		if (error) {
 			return (<div><p>There has been an error</p></div>);
 		}
 
-		//console.log(graph)
+		let custom_style = {
+			position: 'absolute',
+			top: 0,
+			left: 0,
+			'zIndex': -1
+		}
 
 		return (
-			<div>
+			<div style={custom_style} >
+				<IconButton
+					onClick={this.handlePausePlay}
+					disabled={!loading}>
+					{active ? <PauseIcon /> : <PlayArrow />}
+				</IconButton>
 				<ForceGraph2D
 					graphData={graph}
 					nodeLabel="label"
 					linkLabel="label"
 					nodeAutoColorBy="distance"
+					enableNodeDrag={false}
 					nodeCanvasObject={(node, ctx, globalScale) => {
 						const label = node.label;
 						const fontSize = 12 / globalScale;
@@ -106,8 +133,7 @@ class NetworkGraph extends React.Component {
 						ctx.fillStyle = node.color;
 						ctx.fillText(label, node.x, node.y);
 					}}
-				/>;
-				<h1>{loading}</h1>
+				/>
 			</div>
 		);
 	}
