@@ -36,14 +36,15 @@ class Search extends React.Component {
 
 	handleSubmit(event) {
 		alert('http://127.0.0.1:5000/start?obj1=' + this.state.first + '&obj2=' + this.state.second);
+		this.props.updateTarget([this.state.first, this.state.second])
 
-		fetch('http://127.0.0.1:5000/start?obj1=' + this.state.first + '&obj2=' + this.state.second).then(() => {
-			console.log('start request done successfully')
-			this.props.updateTarget(this.state.first, this.state.second)
-		}).catch((e) => {
-			console.log('error sending the start request from search')
-			console.log(e)
-		})
+		// fetch('http://127.0.0.1:5000/start?obj1=' + this.state.first + '&obj2=' + this.state.second).then(() => {
+		// 	console.log('start request done successfully')
+		// 	this.props.updateTarget([this.state.first, this.state.second])
+		// }).catch((e) => {
+		// 	console.log('error sending the start request from search')
+		// 	console.log(e)
+		// })
 		event.preventDefault();
 	}
 

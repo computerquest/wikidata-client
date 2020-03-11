@@ -3,115 +3,101 @@ import ForceGraph2D from 'react-force-graph-2d';
 import IconButton from '@material-ui/core/Button';
 import PauseIcon from '@material-ui/icons/Pause';
 import PlayArrow from '@material-ui/icons/PlayArrow';
+import Search from '../search/Search.js'
 
-class NetworkGraph extends React.Component {
-	constructor(props) {
-		super(props);
+function NetworkGraph(props) {
+	const [graph, setGraph] = React.useState({ nodes: [], links: [], checked: 0, frontier: 0 })
+	const [loading, setLoading] = React.useState(false)
+	const [active, setActive] = React.useState(true)
+	const [target, setTarget] = React.useState([])
+	const [error, setError] = React.useState(false)
 
-		this.state = {
-			graph: {
-				nodes: [],
-				links: [],
-			},
-			loading: false,
-			target: [],
-			active: true
-		}
-		this.fetchGraph = this.fetchGraph.bind(this);
-		this.handlePausePlay = this.handlePausePlay.bind(this);
-	}
+	//does the graph polling
+	React.useEffect(() => {
+		let fetchGraph = () => {
+			if (target[0] === undefined || target[1] === undefined) {
+				return
+			}
 
-	onUnload = e => {
-		e.preventDefault();
-		e.returnValue = '';
+			console.log('fetching the graph')
+			setLoading(true)
 
-		if (this.props.target !== []) {
-			console.log('sending close request')
-			fetch('http://127.0.0.1:5000/detach?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).catch(() => {
-				console.log('there was an error')
+			fetch('http://127.0.0.1:5000/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
+				if (response.ok) {
+					return response.json()
+				} else {
+					throw new Error("Data fetched incorrectly")
+				}
+			}).then(data => {
+				setGraph(data)
+				setError(false)
+				console.log(data)
+			}).catch(error => {
+				console.log(error)
+				setError(true)
+				setLoading(false)
 			})
 		}
-	}
+		let detach = () => {
+			fetch('http://127.0.0.1:5000/detach?obj1=' + target[0] + '&obj2=' + target[1]).catch(() => {
+				console.log('there was an error')
+			})
 
-	componentDidMount() {
-		console.log('this did mount')
-		this.fetchGraph();
-		this.timer = setInterval(() => this.fetchGraph(), 10000);
+			return 'detaching'
+		}
+		let interval = undefined;
 
-		window.addEventListener("beforeunload", this.onUnload);
-	}
+		if (active) {
+			fetch('http://127.0.0.1:5000/start?obj1=' + target[0] + '&obj2=' + target[1]).then(() => {
+				console.log('start request done successfully')
+				setError(false)
+			}).catch((e) => {
+				console.log('error sending the start request from search')
+				console.log(e)
+				setError(true)
+			})
 
-	componentDidUpdate(oldProps) {
-		//this is to make sure that the props changed
-		if (oldProps.target !== this.props.target) {
-			console.log('updating the graph targets to ', this.props.target)
-			this.setState({ target: this.props.target })
+			fetchGraph();
 
-			if (this.props.target !== []) {
-				console.log('sending close request')
-				fetch('http://127.0.0.1:5000/detach?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).catch(() => {
-					console.log('there was an error')
-				})
+			interval = setInterval(fetchGraph, 10000)
+
+			window.addEventListener('beforeunload', detach)
+		}
+		return () => {
+			console.log('clearing the interval and detaching', target)
+
+			if (active) {
+				clearInterval(interval)
+				detach()
+
+				window.removeEventListener('beforeunload', detach)
 			}
 		}
+	}, [active, target])
+
+	if (error) {
+		return (<div><p>There has been an error</p></div>);
 	}
 
-	fetchGraph() {
-		if (this.state.target[0] === undefined || this.state.target[1] === undefined) {
-			return
-		}
-
-		console.log('fetching the graph')
-		this.setState({ loading: true })
-
-
-		fetch('http://127.0.0.1:5000/poll?obj1=' + this.state.target[0] + '&obj2=' + this.state.target[1]).then(response => {
-			if (response.ok) {
-				return response.json()
-			} else {
-				throw new Error("Data fetched incorrectly")
-			}
-		}).then(data => {
-			this.setState({ graph: data, error: false })
-			console.log(this.state.graph)
-		}).catch(error => {
-			console.log(error)
-			this.setState({ error, loading: false })
-		})
+	let custom_style = {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		'zIndex': -1
 	}
 
-	handlePausePlay() {
-		console.log('pausing and playiing')
-		if (this.state.active) {
-			clearInterval(this.timer)
-		} else {
-			this.timer = setInterval(() => this.fetchGraph(), 10000);
-		}
-
-		this.setState({ active: !this.state.active })
-	}
-
-	render() {
-		const { error, graph, loading, active } = this.state
-
-		if (error) {
-			return (<div><p>There has been an error</p></div>);
-		}
-
-		let custom_style = {
-			position: 'absolute',
-			top: 0,
-			left: 0,
-			'zIndex': -1
-		}
-
-		return (
-			<div style={custom_style} >
+	return (
+		<div>
+			<div>
+				<Search updateTarget={setTarget} />
 				<IconButton
-					onClick={this.handlePausePlay}
+					onClick={() => { setActive(!active) }}
 					disabled={!loading}>
 					{active ? <PauseIcon /> : <PlayArrow />}
 				</IconButton>
+				{error && <h3>There has been an error</h3>}
+			</div>
+			<div style={custom_style} >
 				<ForceGraph2D
 					graphData={graph}
 					nodeLabel="label"
@@ -135,8 +121,8 @@ class NetworkGraph extends React.Component {
 					}}
 				/>
 			</div>
-		);
-	}
+		</div>
+	);
 }
 
 export default NetworkGraph;
