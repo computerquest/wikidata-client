@@ -1,6 +1,7 @@
 import React from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import GraphController from '../search/GraphController.js'
+var _ = require('lodash');
 
 function NetworkGraph(props) {
 	const [loading, setLoading] = React.useState(false)
@@ -9,6 +10,7 @@ function NetworkGraph(props) {
 	const [error, setError] = React.useState(false)
 	const [focusNode, setFocusNode] = React.useState('')
 	const [graph, setGraph] = React.useState({ nodes: [], links: [], checked: 0, frontier: 0, paths: [] }) //this is the graph to be rendered
+	const [renderGraph, setRenderGraph] = React.useState({ nodes: [], links: [], checked: 0, frontier: 0, paths: [] })
 
 	//does the graph polling
 	React.useEffect(() => {
@@ -28,6 +30,7 @@ function NetworkGraph(props) {
 				}
 			}).then(data => {
 				setGraph(data)
+				setRenderGraph(data) //not copy so it can scoop up the auto coloring
 				setError(false)
 				console.log(data)
 			}).catch(error => {
@@ -80,11 +83,12 @@ function NetworkGraph(props) {
 			return
 		}
 
+		let newG = _.cloneDeep(graph)
+		console.log('starting', newG)
 
-		//these would be better as sets
-		let links = graph.links
-		let nodes = graph.nodes
-		let paths = graph.paths
+		let links = newG.links
+		let nodes = newG.nodes
+		let paths = newG.paths
 
 		let colored_links = []
 		let colored_nodes = []
@@ -133,26 +137,23 @@ function NetworkGraph(props) {
 			}
 		}
 
-		//console.log(graph, rawGraph)
-		//everyting passed in should be from graph 
-		setGraph(g => g)
+		setRenderGraph(_.cloneDeep(newG))
+		console.log('ast set', colored_nodes)
 
-		//this is how to undo this effect
-		return (() => {
+		// return (() => {
+		// 	console.log(colored_nodes)
+		// 	for (let i = 0; i < colored_nodes.length; i++) {
+		// 		console.log(colored_nodes[i].last_color)
+		// 		colored_nodes[i].color = colored_nodes[i].last_color
+		// 	}
 
-			for (let i = 0; i < colored_nodes.length; i++) {
-				colored_nodes[i].color = colored_nodes[i].last_color
-			}
+		// 	for (let i = 0; i < colored_links.length; i++) {
+		// 		delete colored_links[i].color
+		// 	}
 
-			for (let i = 0; i < colored_links.length; i++) {
-				delete colored_links[i].color
-
-			}
-
-			// eslint-disable-next-line
-			setGraph(g => g)
-		})
-	}, [focusNode])
+		// 	setRenderGraph(graph)
+		// })
+	}, [focusNode, graph])
 
 	let drawNode = (node, ctx, globalScale) => {
 		const label = node.label;
@@ -189,14 +190,14 @@ function NetworkGraph(props) {
 			</div>
 			<div style={custom_style} >
 				<ForceGraph2D
-					graphData={graph}
+					graphData={renderGraph}
 					nodeLabel="label"
 					linkLabel="label"
 					nodeAutoColorBy="distance"
 					//nodeVisibility="visibility"
 					enableNodeDrag={false}
 					nodeCanvasObject={drawNode}
-					onNodeClick={(node, event) => setFocusNode(node.id)}
+					onNodeClick={(node, event) => { setFocusNode(node.id) }}
 					onBackgroundClick={() => setFocusNode('')}
 				/>
 			</div>
