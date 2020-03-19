@@ -41,6 +41,9 @@ export default function GraphController(props) {
 					</IconButton></Grid>
 				</Grid>
 			</Grid>
+			<Grid item xs={12}>
+				{props.displayInfo}
+			</Grid>
 		</Grid>
 	);
 }
