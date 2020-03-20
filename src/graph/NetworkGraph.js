@@ -12,6 +12,7 @@ function NetworkGraph(props) {
 	const [rawData, setRawData] = React.useState({ nodes: {}, links: {}, checked: 0, frontier: 0, paths: [] }) //this is the graph to be rendered
 	const [graph, setGraph] = React.useState({ nodes: [], links: [] })
 	const [displayInfo, setDisplayInfo] = React.useState('')
+	const [pathFilter, setPathFilter] = React.useState((path) => { return true })
 
 	//does the rawData polling
 	React.useEffect(() => {
@@ -83,22 +84,31 @@ function NetworkGraph(props) {
 
 		let all_nodes = _.cloneDeep(rawData.nodes)
 		let all_links = _.cloneDeep(rawData.links)
-		let paths = rawData.paths
+		let paths = _.cloneDeep(rawData.paths)
 
-		let colored_nodes = []
-		let colored_links = []
-		for (let i = 0; i < paths.length; i++) {
-			if (paths[i].includes(focusNode)) {
-				colored_nodes.push(...paths[i])
-
-				for (let a = 0; a < paths[i].length - 1; a++) {
-					colored_links.push((paths[i][a] < paths[i][a + 1]) ? paths[i][a + 1] + paths[i][a] : paths[i][a] + paths[i][a + 1])
-				}
+		console.log(pathFilter)
+		//filters the relevant paths based on the filter criteria
+		for (let i = paths.length - 1; i >= 0; i--) {
+			if (!pathFilter(paths[i])) {
+				paths.splice(i, 1)
+				i++ //this is to counter the subtraction
 			}
 		}
 
 		//for the click coloring
 		if (focusNode !== '') {
+			let colored_nodes = []
+			let colored_links = []
+			for (let i = 0; i < paths.length; i++) {
+				if (paths[i].includes(focusNode)) {
+					colored_nodes.push(...paths[i])
+
+					for (let a = 0; a < paths[i].length - 1; a++) {
+						colored_links.push((paths[i][a] < paths[i][a + 1]) ? paths[i][a + 1] + paths[i][a] : paths[i][a] + paths[i][a + 1])
+					}
+				}
+			}
+
 			console.log(colored_nodes, colored_links)
 
 			for (const id in all_nodes) {
@@ -118,7 +128,6 @@ function NetworkGraph(props) {
 			}
 
 			for (let i = 0; i < colored_links.length; i++) {
-				console.log('coloring', all_links[colored_links[i]])
 				all_links[colored_links[i]].color = '#666666'
 			}
 		}
@@ -132,92 +141,8 @@ function NetworkGraph(props) {
 			links.push(all_links[prop])
 		}
 
-		//this is for the coloring
-
-		if (focusNode === '') {
-			setGraph({ 'nodes': nodes, 'links': links })
-			return
-		}
-
 		setGraph({ 'nodes': nodes, 'links': links })
-	}, [focusNode, rawData])
-
-	//this sets the color property for nodes not involved and darkens edges involved
-	// eslint-disable-next-line
-	// React.useEffect(() => {
-	// 	if (focusNode === '') {
-	// 		return
-	// 	}
-
-
-	// 	let links = _.cloneDeep(graph.links)
-	// 	let nodes = _.cloneDeep(graph.nodes)
-	// 	let paths = rawData.paths
-
-	// 	let colored_links = []
-	// 	let colored_nodes = []
-
-	// 	//gets all of the things to be colored
-	// 	for (let i = 0; i < paths.length; i++) {
-	// 		if (paths[i].includes(focusNode)) {
-	// 			for (let a = 0; a < paths[i].length - 1; a++) {
-	// 				colored_nodes.push(paths[i][a])
-	// 				colored_links.push((paths[i][a] < paths[i][a + 1]) ? paths[i][a + 1] + paths[i][a] : paths[i][a] + paths[i][a + 1])
-	// 			}
-	// 			colored_nodes.push(paths[i][paths[i].length - 1])
-	// 		}
-	// 	}
-
-	// 	let actually_colored = []
-	// 	for (let i = 0; i < nodes.length; i++) {
-	// 		let index = false
-	// 		for (let a = 0; a < colored_nodes.length; a++) {
-	// 			if (nodes[i].id === colored_nodes[a]) {
-	// 				index = true
-	// 				break
-	// 			}
-	// 		}
-	// 		if (!index) {
-	// 			nodes[i].last_color = nodes[i].color
-	// 			nodes[i].color = '#d9d9d9'
-	// 			actually_colored.push(nodes[i])
-	// 		}
-	// 	}
-
-	// 	colored_nodes = actually_colored
-
-	// 	for (let i = 0; i < links.length; i++) {
-	// 		let index = -1
-	// 		for (let a = 0; a < colored_links.length; a++) {
-	// 			if (links[i].id === colored_links[a]) {
-	// 				index = a
-	// 				colored_links[a] = links[i]
-	// 				break
-	// 			}
-	// 		}
-	// 		if (index !== -1) {
-	// 			colored_links[index].color = '#666666'
-	// 		}
-	// 	}
-
-	// 	setGraph({ 'nodes': _.cloneDeep(nodes), 'links': _.cloneDeep(links) })
-
-	// 	console.log('ast set', colored_nodes)
-
-	// 	return (() => {
-	// 		console.log(colored_nodes)
-	// 		for (let i = 0; i < colored_nodes.length; i++) {
-	// 			console.log(colored_nodes[i].last_color)
-	// 			colored_nodes[i].color = colored_nodes[i].last_color
-	// 		}
-
-	// 		for (let i = 0; i < colored_links.length; i++) {
-	// 			delete colored_links[i].color
-	// 		}
-
-	// 		setGraph({ 'nodes': _.cloneDeep(nodes), 'links': _.cloneDeep(nodes) })
-	// 	})
-	// }, [focusNode, graph])
+	}, [focusNode, rawData, pathFilter])
 
 	let drawNode = (node, ctx, globalScale) => {
 		const label = node.label;
@@ -249,7 +174,14 @@ function NetworkGraph(props) {
 	return (
 		<div>
 			<div>
-				<GraphController active={active} setTarget={setTarget} setActive={setActive} loading={loading} displayInfo={'testing'} />
+				<GraphController
+					active={active}
+					setTarget={setTarget}
+					setActive={setActive}
+					loading={loading}
+					displayInfo={'testing'}
+					setPathFilter={setPathFilter}
+				/>
 				{error && <h3>There has been an error</h3>}
 			</div>
 			<div style={custom_style} >
