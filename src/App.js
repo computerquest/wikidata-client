@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import NetworkGraph from './graph/NetworkGraph.js'
+import GraphController from './search/GraphController.js'
 
 function App() {
   return (
     <div className="App">
-      <NetworkGraph />
+      <GraphController />
     </div>
   );
 }

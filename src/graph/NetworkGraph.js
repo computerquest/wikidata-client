@@ -1,98 +1,24 @@
 import React from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import GraphController from '../search/GraphController.js'
+
 var _ = require('lodash');
 
 function NetworkGraph(props) {
-	const [loading, setLoading] = React.useState(false)
-	const [active, setActive] = React.useState(true)
-	const [target, setTarget] = React.useState([])
-	const [error, setError] = React.useState(false)
 	const [focusNode, setFocusNode] = React.useState('')
-	const [rawData, setRawData] = React.useState({ nodes: {}, links: {}, checked: 0, frontier: 0, paths: [] }) //this is the graph to be rendered
 	const [graph, setGraph] = React.useState({ nodes: [], links: [] })
-	const [displayInfo, setDisplayInfo] = React.useState('')
-	const [pathFilter, setPathFilter] = React.useState((path) => { return true })
-
-	//does the rawData polling
-	React.useEffect(() => {
-		let fetchGraph = () => {
-			if (target[0] === undefined || target[1] === undefined) {
-				return
-			}
-
-			console.log('fetching the graph')
-			setLoading(true)
-
-			fetch('http://127.0.0.1:5000/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
-				if (response.ok) {
-					return response.json()
-				} else {
-					throw new Error("Data fetched incorrectly")
-				}
-			}).then(data => {
-				setRawData(data)
-				setError(false)
-				console.log(data)
-			}).catch(error => {
-				console.log(error)
-				setError(true)
-				setLoading(false)
-			})
-		}
-		let detach = () => {
-			fetch('http://127.0.0.1:5000/detach?obj1=' + target[0] + '&obj2=' + target[1]).catch(() => {
-				console.log('there was an error')
-			})
-
-			return 'detaching'
-		}
-		let interval = undefined;
-
-		if (active) {
-			fetch('http://127.0.0.1:5000/start?obj1=' + target[0] + '&obj2=' + target[1]).then(() => {
-				console.log('start request done successfully')
-				setError(false)
-			}).catch((e) => {
-				console.log('error sending the start request from search')
-				console.log(e)
-				setError(true)
-			})
-
-			fetchGraph();
-
-			interval = setInterval(fetchGraph, 10000)
-
-			window.addEventListener('beforeunload', detach)
-		}
-		return () => {
-			console.log('clearing the interval and detaching', target)
-
-			if (active) {
-				clearInterval(interval)
-				detach()
-
-				window.removeEventListener('beforeunload', detach)
-			}
-		}
-	}, [active, target])
 
 	//does the graph parsing from rawData
 	React.useEffect(() => {
 		var nodes = []
 		var links = []
 
-		let all_nodes = _.cloneDeep(rawData.nodes)
-		let all_links = _.cloneDeep(rawData.links)
-		let paths = _.cloneDeep(rawData.paths)
+		let all_nodes = _.cloneDeep(props.data.nodes)
+		let all_links = _.cloneDeep(props.data.links)
+		let paths = _.cloneDeep(props.data.paths)
 
-		console.log(pathFilter)
-		//filters the relevant paths based on the filter criteria
-		for (let i = paths.length - 1; i >= 0; i--) {
-			if (!pathFilter(paths[i])) {
-				paths.splice(i, 1)
-				i++ //this is to counter the subtraction
-			}
+		//if we have paths selected we only load from those paths
+		if (props.selectedPaths.length !== 0) {
+			paths = props.selectedPaths
 		}
 
 		//for the click coloring
@@ -122,13 +48,20 @@ function NetworkGraph(props) {
 				}
 
 				if (!included) {
-					all_nodes[id].last_color = all_nodes[id].color
-					all_nodes[id].color = '#d9d9d9'
+					if (!props.hide) {
+						all_nodes[id].color = '#d9d9d9'
+					} else {
+						all_nodes[id].visibility = false
+					}
 				}
 			}
 
 			for (let i = 0; i < colored_links.length; i++) {
-				all_links[colored_links[i]].color = '#666666'
+				if (!props.hide) {
+					all_links[colored_links[i]].color = '#666666'
+				} else {
+					all_links[colored_links[i]].visibility = true
+				}
 			}
 		}
 
@@ -142,7 +75,7 @@ function NetworkGraph(props) {
 		}
 
 		setGraph({ 'nodes': nodes, 'links': links })
-	}, [focusNode, rawData, pathFilter])
+	}, [focusNode, props.data, props.hide, props.selectedPaths])
 
 	let drawNode = (node, ctx, globalScale) => {
 		const label = node.label;
@@ -160,10 +93,6 @@ function NetworkGraph(props) {
 		ctx.fillText(label, node.x, node.y);
 	}
 
-	if (error) {
-		return (<div><p>There has been an error</p></div>);
-	}
-
 	let custom_style = {
 		position: 'absolute',
 		top: 0,
@@ -173,29 +102,31 @@ function NetworkGraph(props) {
 
 	return (
 		<div>
-			<div>
-				<GraphController
-					active={active}
-					setTarget={setTarget}
-					setActive={setActive}
-					loading={loading}
-					displayInfo={'testing'}
-					setPathFilter={setPathFilter}
-				/>
-				{error && <h3>There has been an error</h3>}
-			</div>
 			<div style={custom_style} >
-				<ForceGraph2D
-					graphData={graph}
-					nodeLabel="label"
-					linkLabel="label"
-					nodeAutoColorBy="distance"
-					//nodeVisibility="visibility"
-					enableNodeDrag={false}
-					nodeCanvasObject={drawNode}
-					onNodeClick={(node, event) => { setFocusNode(node.id) }}
-					onBackgroundClick={() => setFocusNode('')}
-				/>
+				{props.hide && focusNode !== '' ?
+					<ForceGraph2D
+						graphData={graph}
+						nodeLabel="label"
+						linkLabel="label"
+						nodeAutoColorBy="distance"
+						nodeVisibility={(node) => { return node.visibility !== false }}
+						linkVisibility={(link) => { return link.visibility === true }}
+						enableNodeDrag={true} //this doesn't seem to have that big of a performance hit
+						nodeCanvasObject={drawNode}
+						onNodeClick={(node, event) => { setFocusNode(node.id) }}
+						onBackgroundClick={() => setFocusNode('')}
+					/>
+					:
+					< ForceGraph2D
+						graphData={graph}
+						nodeLabel="label"
+						linkLabel="label"
+						nodeAutoColorBy="distance"
+						enableNodeDrag={true} //this doesn't seem to have that big of a performance hit
+						nodeCanvasObject={drawNode}
+						onNodeClick={(node, event) => { setFocusNode(node.id) }}
+						onBackgroundClick={() => setFocusNode('')}
+					/>}
 			</div>
 		</div>
 	);
