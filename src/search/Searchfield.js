@@ -69,7 +69,7 @@ export default function Asynchronous(props) {
 	return (
 		<Autocomplete
 			id="asynchronous"
-			style={{ width: 300 }}
+			xs={12}
 			open={open}
 			onOpen={() => {
 				setOpen(true);
@@ -77,7 +77,7 @@ export default function Asynchronous(props) {
 			onClose={() => {
 				setOpen(false);
 			}}
-			freeSolo={true}
+			freeSolo={false}
 			onInputChange={handleChange}
 			onChange={passUp}
 			getOptionSelected={(option, value) => option.name === value.name}

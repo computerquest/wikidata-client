@@ -122,6 +122,8 @@ function NetworkGraph(props) {
 						nodeLabel="label"
 						linkLabel="label"
 						nodeAutoColorBy="distance"
+						linkVisibility={true}
+						nodeVisibility={true}
 						enableNodeDrag={true} //this doesn't seem to have that big of a performance hit
 						nodeCanvasObject={drawNode}
 						onNodeClick={(node, event) => { setFocusNode(node.id) }}

@@ -160,80 +160,83 @@ export default function GraphController(props) {
 	}
 
 	return (
-		<Grid container justify="flex-end" alignItems="center">
-			<Grid item >
-				<Grid container spacing={1} >
-					<Grid item xs={6}><Searchfield id='first' label={'First Object'} onChange={handleTyping} /></Grid>
-					<Grid item xs={6}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} /></Grid>
-				</Grid>
-			</Grid>
-			<Grid item >
-				<Grid container>
-					<Grid item xs={12}><Button color="primary" type="submit" onClick={handleSubmit}>Search</Button></Grid>
-					<Grid item xs={12}><IconButton
-						onClick={() => setActive(!active)}
-						disabled={target === []}>
-						{active ? <PauseIcon /> : <PlayArrow />}
-					</IconButton></Grid>
-				</Grid>
-			</Grid>
-			<Grid item xs={12}>
-				<Typography id="range-slider" gutterBottom>
-					Path Length Range
-      			</Typography>
-				<Slider
-					min={sliderBounds[0]}
-					max={sliderBounds[1]}
-					value={pathLength}
-					onChange={(event, value) => { setPathLength(value) }}
-					valueLabelDisplay="auto"
-					track={inverted ? 'inverted' : 'normal'}
-					aria-labelledby="range-slider"
-				//getAriaValueText={valuetext}
-				/>
-				<Checkbox
-					checked={inverted}
-					onChange={() => { setInverted(!inverted) }}
-					inputProps={{ 'aria-label': 'primary checkbox' }}
-				/>
-				Inverted
+		<div>
+			<Grid container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
 
-				<Checkbox
-					checked={hide}
-					onChange={() => { setHide(!hide) }}
-					inputProps={{ 'aria-label': 'primary checkbox' }}
-				/>
-				Hide others on click
+				<Grid item xs={4}><Searchfield id='first' label={'First Object'} onChange={handleTyping} /></Grid>
+				<Grid item xs={4}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} /></Grid>
+
+				<Grid item xs={2}><Button color="primary" type="submit" onClick={handleSubmit}>Search</Button></Grid>
+				<Grid item xs={2}>
+					<IconButton
+						onClick={() => setActive(!active)}
+						disabled={target.length === 0}>
+						{active ? <PauseIcon /> : <PlayArrow />}
+					</IconButton>
+				</Grid>
+				<Grid item xs={10}>
+					<Typography id="range-slider" gutterBottom>Path Length Range</Typography>
+					<Slider
+						disabled={target.length === 0}
+						min={sliderBounds[0]}
+						max={sliderBounds[1]}
+						value={pathLength}
+						onChange={(event, value) => { setPathLength(value) }}
+						valueLabelDisplay="auto"
+						track={inverted ? 'inverted' : 'normal'}
+						aria-labelledby="range-slider"
+					/>
+				</Grid>
+				<Grid item xs={2}>
+					<Checkbox
+						disabled={target.length === 0}
+						checked={inverted}
+						onChange={() => { setInverted(!inverted) }}
+						inputProps={{ 'aria-label': 'primary checkbox' }}
+					/>
+					Inverted
+				</Grid>
+				<Grid item xs={12}>
+					<Autocomplete
+						multiple
+						disabled={target.length === 0}
+						id="tags-standard"
+						options={rawData.paths}
+						getOptionLabel={option => {
+							let ans = ''
+							for (let i = 1; i < option.length - 1; i++) {
+								ans += rawData.nodes[option[i]].label + '/'
+							}
+							return ans
+						}}
+						onChange={(event, value) => {
+							setSelectedPaths(value)
+							console.log('this bitch changed')
+						}}
+						//defaultValue={[top100Films[13]]}
+						renderInput={params => (
+							<TextField
+								{...params}
+								variant="standard"
+								label="Multiple values"
+								placeholder="Favorites"
+							/>
+						)}
+					/>
+				</Grid>
+				<Grid item>
+					<Checkbox
+						disabled={target.length === 0}
+						checked={hide}
+						onChange={() => { setHide(!hide) }}
+						inputProps={{ 'aria-label': 'primary checkbox' }}
+					/>
+					Hide others on click
 			</Grid>
-			<Grid item xs={12}>
-				<Autocomplete
-					multiple
-					id="tags-standard"
-					options={rawData.paths}
-					getOptionLabel={option => {
-						let ans = ''
-						for (let i = 1; i < option.length - 1; i++) {
-							ans += rawData.nodes[option[i]].label + '/'
-						}
-						return ans
-					}}
-					onChange={(event, value) => {
-						setSelectedPaths(value)
-						console.log('this bitch changed')
-					}}
-					//defaultValue={[top100Films[13]]}
-					renderInput={params => (
-						<TextField
-							{...params}
-							variant="standard"
-							label="Multiple values"
-							placeholder="Favorites"
-						/>
-					)}
-				/>
 			</Grid>
+
 			{error}
 			<NetworkGraph data={data} hide={hide} selectedPaths={selectedPaths} />
-		</Grid>
+		</div>
 	);
 }
