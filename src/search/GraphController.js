@@ -159,6 +159,18 @@ export default function GraphController(props) {
 		setTerms(c)
 	}
 
+	const pathLabel = (option) => {
+		let ans = ''
+
+		for (let i = 0; i < option.length - 1; i++) {
+			let key = option[i + 1] > option[i] ? option[i + 1] + option[i] : option[i] + option[i + 1]
+			ans += rawData.nodes[option[i]].label + ' ' + rawData.links[key].label + ' '
+		}
+		ans += rawData.nodes[option[option.length - 1]].label
+
+		return ans
+	}
+
 	return (
 		<div>
 			<Grid container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
@@ -202,13 +214,7 @@ export default function GraphController(props) {
 						disabled={target.length === 0}
 						id="tags-standard"
 						options={rawData.paths}
-						getOptionLabel={option => {
-							let ans = ''
-							for (let i = 1; i < option.length - 1; i++) {
-								ans += rawData.nodes[option[i]].label + '/'
-							}
-							return ans
-						}}
+						getOptionLabel={option => pathLabel(option)}
 						onChange={(event, value) => {
 							setSelectedPaths(value)
 							console.log('this bitch changed')
@@ -218,21 +224,26 @@ export default function GraphController(props) {
 							<TextField
 								{...params}
 								variant="standard"
-								label="Multiple values"
+								label="Paths to show"
 								placeholder="Favorites"
 							/>
 						)}
 					/>
 				</Grid>
-				<Grid item>
-					<Checkbox
-						disabled={target.length === 0}
-						checked={hide}
-						onChange={() => { setHide(!hide) }}
-						inputProps={{ 'aria-label': 'primary checkbox' }}
-					/>
-					Hide others on click
-			</Grid>
+				<Grid item container justify="flex-end" alignItems="center" spacing={3}>
+					<Grid item>Total Paths: {rawData.paths.length}</Grid>
+					<Grid item>Checked: {rawData.checked}</Grid>
+					<Grid item> In Queue (frontier): {rawData.frontier}</Grid>
+					<Grid item>
+						<Checkbox
+							disabled={target.length === 0}
+							checked={hide}
+							onChange={() => { setHide(!hide) }}
+							inputProps={{ 'aria-label': 'primary checkbox' }}
+						/>
+						Hide others on click
+					</Grid>
+				</Grid>
 			</Grid>
 
 			{error}
