@@ -11,6 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import NetworkGraph from '../graph/NetworkGraph.js';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
+import MuiAlert from '@material-ui/lab/Alert';
 
 export default function GraphController(props) {
 	const [terms, setTerms] = React.useState({})
@@ -30,13 +31,11 @@ export default function GraphController(props) {
 			if (target[0] === undefined || target[1] === undefined) {
 				return
 			}
-
-			console.log('fetching the graph')
-
 			fetch('http://127.0.0.1:5000/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
 				if (response.ok) {
 					return response.json()
 				} else {
+					setError(true)
 					throw new Error("Data fetched incorrectly")
 				}
 			}).then(data => {
@@ -75,7 +74,6 @@ export default function GraphController(props) {
 			window.addEventListener('beforeunload', detach)
 		}
 		return () => {
-			console.log('clearing the interval and detaching', target)
 
 			if (active) {
 				clearInterval(interval)
@@ -89,6 +87,7 @@ export default function GraphController(props) {
 	React.useEffect(() => {
 		let min = 10000
 		let max = 0
+
 		for (let i = 0; i < rawData.paths.length; i++) {
 			if (rawData.paths[i].length < min) {
 				min = rawData.paths[i].length
@@ -147,6 +146,7 @@ export default function GraphController(props) {
 	}, [rawData, pathLength, inverted, selectedPaths])
 
 	const handleSubmit = (event) => {
+		console.log(terms.first, terms.second)
 		setTarget([terms.first, terms.second])
 		setActive(true)
 
@@ -154,9 +154,12 @@ export default function GraphController(props) {
 	}
 
 	const handleTyping = (who, event) => {
-		let c = terms
+		let c = {}
 		c[who] = event
-		setTerms(c)
+
+		setTerms(prevState => {
+			return { ...prevState, ...c };
+		})
 	}
 
 	const pathLabel = (option) => {
@@ -164,21 +167,28 @@ export default function GraphController(props) {
 
 		for (let i = 0; i < option.length - 1; i++) {
 			let key = option[i + 1] > option[i] ? option[i + 1] + option[i] : option[i] + option[i + 1]
-			ans += rawData.nodes[option[i]].label + ' ' + rawData.links[key].label + ' '
+			console.log(rawData.links[key].source, option[i])
+			let link = rawData.links[key].source === option[i] ? ' --' + rawData.links[key].label + '> ' : ' <' + rawData.links[key].label + '-- '
+			ans += rawData.nodes[option[i]].label + link
 		}
 		ans += rawData.nodes[option[option.length - 1]].label
 
 		return ans
 	}
 
+	// const pathLengths = []
+	// for (let i = 0; i < rawData.paths.length; i++) {
+	// 	pathLengths.push(rawData.paths[i].length)
+	// }
+	// console.log('pathLengths', pathLengths)
+
 	return (
 		<div>
 			<Grid container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
-
 				<Grid item xs={4}><Searchfield id='first' label={'First Object'} onChange={handleTyping} /></Grid>
 				<Grid item xs={4}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} /></Grid>
 
-				<Grid item xs={2}><Button color="primary" type="submit" onClick={handleSubmit}>Search</Button></Grid>
+				<Grid item xs={2}><Button color="primary" type="submit" onClick={handleSubmit} disabled={!(/Q\d*$/.test(terms.first) && /Q\d*$/.test(terms.second))}>Search</Button></Grid>
 				<Grid item xs={2}>
 					<IconButton
 						onClick={() => setActive(!active)}
@@ -232,6 +242,8 @@ export default function GraphController(props) {
 				</Grid>
 				<Grid item container justify="flex-end" alignItems="center" spacing={3}>
 					<Grid item>Total Paths: {rawData.paths.length}</Grid>
+					<Grid item>Total Nodes: {Object.keys(rawData.nodes).length}</Grid>
+					<Grid item>Total Edges: {Object.keys(rawData.links).length}</Grid>
 					<Grid item>Checked: {rawData.checked}</Grid>
 					<Grid item> In Queue (frontier): {rawData.frontier}</Grid>
 					<Grid item>
@@ -246,8 +258,8 @@ export default function GraphController(props) {
 				</Grid>
 			</Grid>
 
-			{error}
+			{error && <MuiAlert elevation={6} variant="filled" severity="error" style={{ width: "100%", position: "absolute", bottom: "0px" }}>Problem fetching data</MuiAlert>}
 			<NetworkGraph data={data} hide={hide} selectedPaths={selectedPaths} />
-		</div>
+		</div >
 	);
 }
