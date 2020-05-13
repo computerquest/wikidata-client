@@ -13,6 +13,8 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
 import MuiAlert from '@material-ui/lab/Alert';
 
+var url = 'https://wikidata-server.herokuapp.com'
+//var url = 'http://127.0.0.1:5000'
 export default function GraphController(props) {
 	const [terms, setTerms] = React.useState({})
 	const [inverted, setInverted] = React.useState(false)
@@ -31,8 +33,9 @@ export default function GraphController(props) {
 			if (target[0] === undefined || target[1] === undefined) {
 				return
 			}
-			fetch('http://127.0.0.1:5000/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
+			fetch(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
 				if (response.ok) {
+					console.log(response)
 					return response.json()
 				} else {
 					setError(true)
@@ -48,7 +51,7 @@ export default function GraphController(props) {
 		}
 
 		let detach = () => {
-			fetch('http://127.0.0.1:5000/detach?obj1=' + target[0] + '&obj2=' + target[1]).catch(() => {
+			fetch(url + '/detach?obj1=' + target[0] + '&obj2=' + target[1]).catch(() => {
 				console.log('there was an error')
 			})
 
@@ -58,7 +61,7 @@ export default function GraphController(props) {
 		let interval = undefined;
 
 		if (active) {
-			fetch('http://127.0.0.1:5000/start?obj1=' + target[0] + '&obj2=' + target[1]).then(() => {
+			fetch(url + '/start?obj1=' + target[0] + '&obj2=' + target[1]).then(() => {
 				console.log('start request done successfully')
 				setError(false)
 			}).catch((e) => {
