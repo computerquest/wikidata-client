@@ -13,14 +13,15 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
 import MuiAlert from '@material-ui/lab/Alert';
 
-var url = 'https://wikidata-server.herokuapp.com'
-//var url = 'http://127.0.0.1:5000'
+//var url = 'https://wikidata-server.herokuapp.com'
+var url = 'http://127.0.0.1:5000'
 export default function GraphController(props) {
 	const [terms, setTerms] = React.useState({})
 	const [inverted, setInverted] = React.useState(false)
 	const [pathLength, setPathLength] = React.useState([1, 9])
 	const [sliderBounds, setSliderBounds] = React.useState([0, 10])
-	const [rawData, setRawData] = React.useState({ nodes: {}, links: {}, checked: 0, frontier: 0, paths: [] }) //this is the graph to be rendered
+	const [rawData, setRawData] = React.useState({ nodes: {}, links: {}, paths: [] }) //this is the graph to be rendered
+	const [stats, setStats] = React.useState({ checked: 0, frontier: 0, num_paths: 0 })
 	const [error, setError] = React.useState(false)
 	const [target, setTarget] = React.useState([])
 	const [active, setActive] = React.useState(false)
@@ -29,20 +30,32 @@ export default function GraphController(props) {
 	const [selectedPaths, setSelectedPaths] = React.useState([])
 
 	React.useEffect(() => {
-		let fetchData = () => {
+		function fetchData() {
+			if (typeof fetchData.num_paths == 'undefined') {
+				fetchData.num_paths = 0;
+			}
 			if (target[0] === undefined || target[1] === undefined) {
 				return
 			}
-			fetch(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1]).then(response => {
+			console.log(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1] + '&received=' + fetchData.num_paths)
+			fetch(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1] + '&received=' + fetchData.num_paths).then(response => {
 				if (response.ok) {
 					console.log(response)
 					return response.json()
 				} else {
+					console.log(response)
 					setError(true)
 					throw new Error("Data fetched incorrectly")
 				}
 			}).then(data => {
-				setRawData(data)
+				if (data.paths.length > 0) {
+					console.log('the paths have updated', data)
+					setRawData(current => {
+						return { nodes: { ...current.nodes, ...data.nodes }, links: { ...current.links, ...data.links }, paths: current.paths.concat(data.paths) }
+					})
+				}
+				setStats(old => { return { checked: data.checked, frontier: data.frontier, num_paths: old.num_paths + data.paths.length } })
+				fetchData.num_paths += data.paths.length
 				setError(false)
 			}).catch(error => {
 				console.log(error)
@@ -72,7 +85,7 @@ export default function GraphController(props) {
 
 			fetchData();
 
-			interval = setInterval(fetchData, 10000)
+			interval = setInterval(fetchData, 5000)
 
 			window.addEventListener('beforeunload', detach)
 		}
@@ -244,11 +257,11 @@ export default function GraphController(props) {
 					/>
 				</Grid>
 				<Grid item container justify="flex-end" alignItems="center" spacing={3}>
-					<Grid item>Total Paths: {rawData.paths.length}</Grid>
+					<Grid item>Total Paths: {stats.num_paths}</Grid>
 					<Grid item>Total Nodes: {Object.keys(rawData.nodes).length}</Grid>
 					<Grid item>Total Edges: {Object.keys(rawData.links).length}</Grid>
-					<Grid item>Checked: {rawData.checked}</Grid>
-					<Grid item> In Queue (frontier): {rawData.frontier}</Grid>
+					<Grid item>Checked: {stats.checked}</Grid>
+					<Grid item> In Queue (frontier): {stats.frontier}</Grid>
 					<Grid item>
 						<Checkbox
 							disabled={target.length === 0}

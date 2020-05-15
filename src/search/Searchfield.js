@@ -54,9 +54,6 @@ export default function Asynchronous(props) {
 
 
 	let passUp = (info, value) => {
-		console.log(info)
-		console.log(value)
-
 		if (value != null) {
 			props.onChange(props.id, value.value[0])
 		}
