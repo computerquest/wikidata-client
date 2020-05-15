@@ -13,8 +13,8 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
 import MuiAlert from '@material-ui/lab/Alert';
 
-//var url = 'https://wikidata-server.herokuapp.com'
-var url = 'http://127.0.0.1:5000'
+var url = 'https://wikidata-server.herokuapp.com'
+//var url = 'http://127.0.0.1:5000'
 export default function GraphController(props) {
 	const [terms, setTerms] = React.useState({})
 	const [inverted, setInverted] = React.useState(false)
