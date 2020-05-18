@@ -25,6 +25,7 @@ export default function Asynchronous(props) {
 			let ans = [...(await wikidataLookup.findPerson(init_text)), ...(await wikidataLookup.findRS(init_text)), ...(await wikidataLookup.findOrganization(init_text)),
 			...(await wikidataLookup.findPlace(init_text)), ...(await wikidataLookup.findTitle(init_text))]
 
+			console.log(ans)
 			//if (active) {
 			let list = []
 			const map = new Map();
@@ -55,7 +56,7 @@ export default function Asynchronous(props) {
 
 	let passUp = (info, value) => {
 		if (value != null) {
-			props.onChange(props.id, value.value[0])
+			props.onChange(props.id, value.value[0], value.name)
 		}
 	}
 
@@ -74,6 +75,7 @@ export default function Asynchronous(props) {
 			onClose={() => {
 				setOpen(false);
 			}}
+			autoSelect={true}
 			freeSolo={false}
 			onInputChange={handleChange}
 			onChange={passUp}
@@ -81,6 +83,7 @@ export default function Asynchronous(props) {
 			getOptionLabel={option => option.name}
 			options={options}
 			loading={loading}
+			inputValue={props.text}
 			noOptionsText={'No Options '}
 			renderInput={params => (
 				<TextField

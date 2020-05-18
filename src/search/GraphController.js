@@ -16,7 +16,7 @@ import MuiAlert from '@material-ui/lab/Alert';
 var url = 'https://wikidata-server.herokuapp.com'
 //var url = 'http://127.0.0.1:5000'
 export default function GraphController(props) {
-	const [terms, setTerms] = React.useState({})
+	const [terms, setTerms] = React.useState({ first: [], second: [] })
 	const [inverted, setInverted] = React.useState(false)
 	const [pathLength, setPathLength] = React.useState([1, 9])
 	const [sliderBounds, setSliderBounds] = React.useState([0, 10])
@@ -30,6 +30,13 @@ export default function GraphController(props) {
 	const [selectedPaths, setSelectedPaths] = React.useState([])
 
 	React.useEffect(() => {
+		if (props.match.params.obj1 && props.match.params.obj2 && props.match.params.first && props.match.params.second) {
+			setTarget([props.match.params.obj1, props.match.params.obj2])
+			setActive(true)
+		}
+	}, [props])
+
+	React.useEffect(() => {
 		function fetchData() {
 			if (typeof fetchData.num_paths == 'undefined') {
 				fetchData.num_paths = 0;
@@ -40,16 +47,13 @@ export default function GraphController(props) {
 			console.log(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1] + '&received=' + fetchData.num_paths)
 			fetch(url + '/poll?obj1=' + target[0] + '&obj2=' + target[1] + '&received=' + fetchData.num_paths).then(response => {
 				if (response.ok) {
-					console.log(response)
 					return response.json()
 				} else {
-					console.log(response)
 					setError(true)
 					throw new Error("Data fetched incorrectly")
 				}
 			}).then(data => {
 				if (data.paths.length > 0) {
-					console.log('the paths have updated', data)
 					setRawData(current => {
 						return { nodes: { ...current.nodes, ...data.nodes }, links: { ...current.links, ...data.links }, paths: current.paths.concat(data.paths) }
 					})
@@ -58,7 +62,6 @@ export default function GraphController(props) {
 				fetchData.num_paths += data.paths.length
 				setError(false)
 			}).catch(error => {
-				console.log(error)
 				setError(true)
 			})
 		}
@@ -162,16 +165,15 @@ export default function GraphController(props) {
 	}, [rawData, pathLength, inverted, selectedPaths])
 
 	const handleSubmit = (event) => {
-		console.log(terms.first, terms.second)
-		setTarget([terms.first, terms.second])
+		setTarget([terms.first[0], terms.second[0]])
 		setActive(true)
-
+		props.history.push('/' + terms.first[1] + '/' + terms.first[0] + '/' + terms.second[1] + '/' + terms.second[0])
 		event.preventDefault();
 	}
 
-	const handleTyping = (who, event) => {
+	const handleTyping = (who, event, text) => {
 		let c = {}
-		c[who] = event
+		c[who] = [event, text]
 
 		setTerms(prevState => {
 			return { ...prevState, ...c };
@@ -192,19 +194,13 @@ export default function GraphController(props) {
 		return ans
 	}
 
-	// const pathLengths = []
-	// for (let i = 0; i < rawData.paths.length; i++) {
-	// 	pathLengths.push(rawData.paths[i].length)
-	// }
-	// console.log('pathLengths', pathLengths)
-
 	return (
 		<div>
 			<Grid container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
-				<Grid item xs={4}><Searchfield id='first' label={'First Object'} onChange={handleTyping} /></Grid>
-				<Grid item xs={4}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} /></Grid>
+				<Grid item xs={4}><Searchfield id='first' label={'First Object'} onChange={handleTyping} text={props.match.params.first} /></Grid>
+				<Grid item xs={4}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} text={props.match.params.second} /></Grid>
 
-				<Grid item xs={2}><Button color="primary" type="submit" onClick={handleSubmit} disabled={!(/Q\d*$/.test(terms.first) && /Q\d*$/.test(terms.second))}>Search</Button></Grid>
+				<Grid item xs={2}><Button color="primary" type="submit" onClick={handleSubmit} disabled={!(/Q\d*$/.test(terms.first[0]) && /Q\d*$/.test(terms.second[0]))}>Search</Button></Grid>
 				<Grid item xs={2}>
 					<IconButton
 						onClick={() => setActive(!active)}
@@ -232,7 +228,7 @@ export default function GraphController(props) {
 						onChange={() => { setInverted(!inverted) }}
 						inputProps={{ 'aria-label': 'primary checkbox' }}
 					/>
-					Inverted
+					Invert
 				</Grid>
 				<Grid item xs={12}>
 					<Autocomplete
@@ -275,6 +271,8 @@ export default function GraphController(props) {
 			</Grid>
 
 			{error && <MuiAlert elevation={6} variant="filled" severity="error" style={{ width: "100%", position: "absolute", bottom: "0px" }}>Problem fetching data</MuiAlert>}
+			<NetworkGraph data={data} hide={hide} selectedPaths={selectedPaths} />
+			{stats.frontier === 0 && stats.checked > 0 && <MuiAlert elevation={6} variant="filled" severity="success" style={{ width: "100%", position: "absolute", bottom: "0px" }}>Search complete. Maximum search depth of 10 reached.</MuiAlert>}
 			<NetworkGraph data={data} hide={hide} selectedPaths={selectedPaths} />
 		</div >
 	);

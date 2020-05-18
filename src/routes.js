@@ -6,15 +6,10 @@ import About from './about/About';
 export default (
     <BrowserRouter>
         <Switch>
-            <Route exact path="/">
-                <App />
-            </Route>
-            <Route path="/about">
-                <About />
-            </Route>
-            <Route>
-                <App />
-            </Route>
+            <Route exact path="/" render={props => <App {...props} />} />
+            <Route path="/about" component={About} />
+            <Route path="/:first/:obj1/:second/:obj2" render={props => <App {...props} />} />
+            <Route component={App} />
         </Switch>
     </BrowserRouter>
 );
