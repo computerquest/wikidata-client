@@ -196,7 +196,7 @@ export default function GraphController(props) {
 
 	return (
 		<div>
-			<Grid container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
+			<Grid item container justify="flex-end" alignItems="center" xs={5} style={{ margin: '20px', float: 'right' }} spacing={2}>
 				<Grid item xs={4}><Searchfield id='first' label={'First Object'} onChange={handleTyping} text={props.match.params.first} /></Grid>
 				<Grid item xs={4}><Searchfield id='second' label={'Second Object'} onChange={handleTyping} text={props.match.params.second} /></Grid>
 
